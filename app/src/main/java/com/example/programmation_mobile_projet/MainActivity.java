@@ -12,6 +12,7 @@ import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.jar.Attributes;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -30,24 +31,21 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        makeApiCall();
+    }
 
+    private void showList(List<Beer> BeerList) {
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
-        List<String> input = new ArrayList<>();
-        for (int i = 0; i < 100; i++) {
-            input.add("Test" + i);
-        }
 
-        ListAdapter = new ListAdapter(input);
+        ListAdapter = new ListAdapter(BeerList);
         recyclerView.setAdapter(ListAdapter);
-
-        makeApiCall();
     }
 
-    private static final String BASE_URL = "https://pokeapi.co/";
+    private static final String BASE_URL = "https://api.punkapi.com/";
 
     private void makeApiCall(){
         Gson gson = new GsonBuilder()
@@ -59,21 +57,21 @@ public class MainActivity extends AppCompatActivity {
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
 
-        BeerApi BeerApi = retrofit.create(BeerApi.class);
+        final BeerApi BeerApi = retrofit.create(BeerApi.class);
 
-        Call<RestBeerResponse> call = BeerApi.getBeerResponse();
-        call.enqueue(new Callback<RestBeerResponse>() {
+        Call<List<Beer>> call = BeerApi.getBeerResponse();
+        call.enqueue(new Callback<List<Beer>>() {
             @Override
-            public void onResponse(Call<RestBeerResponse> call, Response<RestBeerResponse> response) {
+            public void onResponse(Call<List<Beer>> call, Response<List<Beer>> response) {
                 if(response.isSuccessful() && response.body() !=null) {
-                    List<Beer> BeerList = response.body().getResults();
-                    Toast.makeText(getApplicationContext(), "API Success", Toast.LENGTH_SHORT).show();
+                    List<Beer> BeerList = response.body();
+                    showList(BeerList);
                 } else
                     showError();
             }
 
             @Override
-            public void onFailure(Call<RestBeerResponse> call, Throwable t) {
+            public void onFailure(Call<List<Beer>> call, Throwable t) {
 
             }
         });
